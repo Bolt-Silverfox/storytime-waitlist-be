@@ -4,6 +4,7 @@ import * as nodemailer from 'nodemailer';
 import * as handlebars from 'handlebars';
 import * as fs from 'fs';
 import * as path from 'path';
+
 @Injectable()
 export class EmailService {
   private transporter: nodemailer.Transporter;
@@ -24,12 +25,18 @@ export class EmailService {
   }
 
   private loadTemplates() {
-    const templateDir = path.join(
-      process.cwd(),
-      'dist',
-      'waitlist',
-      'templates',
-    );
+    // Try dist directory first (production), then src directory (development/testing)
+    let templateDir = path.join(process.cwd(), 'dist', 'waitlist', 'templates');
+    
+    if (!fs.existsSync(templateDir)) {
+      templateDir = path.join(process.cwd(), 'src', 'waitlist', 'templates');
+    }
+
+    if (!fs.existsSync(templateDir)) {
+      console.warn('Template directory not found, skipping template loading');
+      return;
+    }
+
     const templateFiles = fs
       .readdirSync(templateDir)
       .filter((file) => file.endsWith('.hbs'));
