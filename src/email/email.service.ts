@@ -9,13 +9,15 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor(private configService: ConfigService) {
+    const encryption = this.configService.get('MAIL_ENCRYPTION', 'TLS');
+
     this.transporter = nodemailer.createTransport({
-      host: this.configService.get('EMAIL_HOST', 'smtp.gmail.com'),
-      port: this.configService.get('EMAIL_PORT', 587),
-      secure: false,
+      host: this.configService.get('MAIL_HOST', 'smtp.gmail.com'),
+      port: this.configService.get('MAIL_PORT', 587),
+      secure: encryption.toUpperCase() === 'SSL', // true for SSL (465), false for TLS (587)
       auth: {
-        user: this.configService.get('EMAIL_USER'),
-        pass: this.configService.get('EMAIL_PASS'),
+        user: this.configService.get('MAIL_USERNAME'),
+        pass: this.configService.get('MAIL_PASSWORD'),
       },
     });
   }
@@ -24,7 +26,7 @@ export class EmailService {
     const html = await render(StorytimeWelcome({ username: name, email }));
 
     await this.transporter.sendMail({
-      from: this.configService.get('EMAIL_FROM', 'noreply@storytime.com'),
+      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'noreply@storytime.com')}>`,
       to: email,
       subject: 'Welcome to StoryTime Waitlist!',
       html,
