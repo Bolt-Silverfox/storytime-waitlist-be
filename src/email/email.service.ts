@@ -1,26 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { CreateEmailDto } from './dto/create-email.dto';
-import { UpdateEmailDto } from './dto/update-email.dto';
+import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
+import { render } from '@react-email/render';
+import { StorytimeWelcome } from './templates/storytime-welcome';
 
 @Injectable()
 export class EmailService {
-  create(createEmailDto: CreateEmailDto) {
-    return 'This action adds a new email';
+  private transporter: nodemailer.Transporter;
+
+  constructor(private configService: ConfigService) {
+    this.transporter = nodemailer.createTransport({
+      host: this.configService.get('EMAIL_HOST', 'smtp.gmail.com'),
+      port: this.configService.get('EMAIL_PORT', 587),
+      secure: false,
+      auth: {
+        user: this.configService.get('EMAIL_USER'),
+        pass: this.configService.get('EMAIL_PASS'),
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all email`;
-  }
+  async sendWelcomeEmail(email: string, name: string): Promise<void> {
+    const html = await render(StorytimeWelcome({ username: name, email }));
 
-  findOne(id: number) {
-    return `This action returns a #${id} email`;
-  }
-
-  update(id: number, updateEmailDto: UpdateEmailDto) {
-    return `This action updates a #${id} email`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} email`;
+    await this.transporter.sendMail({
+      from: this.configService.get('EMAIL_FROM', 'noreply@storytime.com'),
+      to: email,
+      subject: 'Welcome to StoryTime Waitlist!',
+      html,
+    });
   }
 }

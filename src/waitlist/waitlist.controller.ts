@@ -1,34 +1,57 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WaitlistService } from './waitlist.service';
 import { CreateWaitlistDto } from './dto/create-waitlist.dto';
-import { UpdateWaitlistDto } from './dto/update-waitlist.dto';
+import { WaitlistResponseDto } from './dto/waitlist-response.dto';
+import { ApiResponseDto } from './dto/api-response.dto';
+import { PaginatedResponseDto } from './dto/paginated-response.dto';
+import { WaitlistUser } from './entities/waitlist.entity';
 
+@ApiTags('waitlist')
 @Controller('waitlist')
 export class WaitlistController {
   constructor(private readonly waitlistService: WaitlistService) {}
 
-  @Post()
-  create(@Body() createWaitlistDto: CreateWaitlistDto) {
-    return this.waitlistService.create(createWaitlistDto);
+  @Post('subscribe')
+  @ApiOperation({ summary: 'Subscribe to waitlist' })
+  @ApiResponse({
+    status: 201,
+    description: 'Successfully added to waitlist',
+    type: ApiResponseDto<WaitlistResponseDto>,
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 409, description: 'Email already registered' })
+  async subscribe(
+    @Body() createWaitlistDto: CreateWaitlistDto,
+  ): Promise<WaitlistResponseDto> {
+    return this.waitlistService.subscribe(createWaitlistDto);
   }
 
-  @Get()
-  findAll() {
-    return this.waitlistService.findAll();
+  @Get('emails')
+  @ApiOperation({ summary: 'Get all waitlist emails (Admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all waitlist users',
+    type: ApiResponseDto<WaitlistUser[]>,
+  })
+  async getAllEmails(): Promise<WaitlistUser[]> {
+    return this.waitlistService.getAllEmails();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.waitlistService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWaitlistDto: UpdateWaitlistDto) {
-    return this.waitlistService.update(+id, updateWaitlistDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.waitlistService.remove(+id);
+  @Get('emails/paginated')
+  @ApiOperation({ summary: 'Get paginated waitlist emails (Admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of waitlist users',
+    type: PaginatedResponseDto<WaitlistUser>,
+  })
+  async getPaginatedEmails(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.waitlistService.getPaginatedEmails(
+      parseInt(page),
+      parseInt(limit),
+    );
   }
 }
