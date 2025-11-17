@@ -8,8 +8,15 @@ describe('WaitlistController', () => {
   let controller: WaitlistController;
 
   const mockWaitlistService = {
-    subscribe: jest.fn(),
-    getAllEmails: jest.fn(),
+    subscribe: jest.fn().mockResolvedValue({
+      email: 'test@example.com',
+      name: 'John Doe',
+    }),
+    getAllEmails: jest
+      .fn()
+      .mockResolvedValue([
+        { id: '1', email: 'test@example.com', name: 'John Doe' },
+      ]),
   };
 
   const mockEmailService = {

@@ -2,19 +2,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException } from '@nestjs/common';
 import { WaitlistService } from './waitlist.service';
 import { EmailService } from '../email/email.service';
-import { PrismaService } from '../database/prisma.service';
+import { WaitlistDal } from './waitlist-dal';
 
 describe('WaitlistService', () => {
   let service: WaitlistService;
-  let prismaService: PrismaService;
   let emailService: EmailService;
+  let waitlistDal: WaitlistDal;
 
-  const mockPrismaService = {
-    waitlistUser: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      findMany: jest.fn(),
-    },
+  const mockWaitlistDal = {
+    findByEmail: jest.fn(),
+    createWaitlistEntry: jest.fn(),
+    paginate: jest.fn(),
   };
 
   const mockEmailService = {
@@ -25,13 +23,13 @@ describe('WaitlistService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WaitlistService,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: WaitlistDal, useValue: mockWaitlistDal },
         { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
     service = module.get<WaitlistService>(WaitlistService);
-    prismaService = module.get<PrismaService>(PrismaService);
+    waitlistDal = module.get<WaitlistDal>(WaitlistDal);
     emailService = module.get<EmailService>(EmailService);
   });
 
@@ -50,45 +48,46 @@ describe('WaitlistService', () => {
     };
 
     it('should successfully subscribe a new user', async () => {
-      mockPrismaService.waitlistUser.findUnique.mockResolvedValue(null);
-      mockPrismaService.waitlistUser.create.mockResolvedValue({
+      mockWaitlistDal.findByEmail.mockResolvedValue(null);
+      mockWaitlistDal.createWaitlistEntry.mockResolvedValue({
         id: '1',
         email: createWaitlistDto.email,
         name: createWaitlistDto.name,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       });
 
       const result = await service.subscribe(createWaitlistDto);
 
-      expect(mockPrismaService.waitlistUser.findUnique).toHaveBeenCalledWith({
-        where: { email: createWaitlistDto.email },
-      });
-      expect(mockPrismaService.waitlistUser.create).toHaveBeenCalledWith({
-        data: createWaitlistDto,
-      });
+      expect(mockWaitlistDal.findByEmail).toHaveBeenCalledWith(
+        createWaitlistDto.email,
+      );
+      expect(mockWaitlistDal.createWaitlistEntry).toHaveBeenCalledWith(
+        createWaitlistDto,
+      );
       expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(
         createWaitlistDto.email,
         createWaitlistDto.name,
       );
       expect(result).toEqual({
-        message: 'Successfully added to waitlist',
         email: createWaitlistDto.email,
         name: createWaitlistDto.name,
       });
     });
 
     it('should throw ConflictException for existing email', async () => {
-      mockPrismaService.waitlistUser.findUnique.mockResolvedValue({
+      mockWaitlistDal.findByEmail.mockResolvedValue({
         id: '1',
         email: createWaitlistDto.email,
         name: 'Existing User',
+        created_at: new Date(),
+        updated_at: new Date(),
       });
 
       await expect(service.subscribe(createWaitlistDto)).rejects.toThrow(
         ConflictException,
       );
-      expect(mockPrismaService.waitlistUser.create).not.toHaveBeenCalled();
+      expect(mockWaitlistDal.createWaitlistEntry).not.toHaveBeenCalled();
       expect(mockEmailService.sendWelcomeEmail).not.toHaveBeenCalled();
     });
   });
@@ -100,24 +99,38 @@ describe('WaitlistService', () => {
           id: '1',
           email: 'user1@example.com',
           name: 'User 1',
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          created_at: new Date(),
+          updated_at: new Date(),
         },
         {
           id: '2',
           email: 'user2@example.com',
           name: 'User 2',
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          created_at: new Date(),
+          updated_at: new Date(),
         },
       ];
 
-      mockPrismaService.waitlistUser.findMany.mockResolvedValue(mockUsers);
+      const mockPaginatedResult = {
+        data: mockUsers,
+        paginationMeta: {
+          page: 1,
+          limit: 1000,
+          total: 2,
+          total_pages: 1,
+          has_next: false,
+          has_previous: false,
+        },
+      };
+
+      mockWaitlistDal.paginate.mockResolvedValue(mockPaginatedResult);
 
       const result = await service.getAllEmails();
 
-      expect(mockPrismaService.waitlistUser.findMany).toHaveBeenCalledWith({
-        orderBy: { createdAt: 'desc' },
+      expect(mockWaitlistDal.paginate).toHaveBeenCalledWith({
+        orderBy: { created_at: 'desc' },
+        page: 1,
+        limit: 1000,
       });
       expect(result).toEqual(mockUsers);
     });

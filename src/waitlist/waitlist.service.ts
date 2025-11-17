@@ -39,7 +39,6 @@ export class WaitlistService {
     }
 
     return {
-      message: 'Successfully added to waitlist',
       email,
       name,
     };
@@ -47,7 +46,7 @@ export class WaitlistService {
 
   async getAllEmails(): Promise<WaitlistUser[]> {
     const result = await this.waitlistDal.paginate({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
       page: 1,
       limit: 1000,
     });
@@ -57,7 +56,7 @@ export class WaitlistService {
 
   async getPaginatedEmails(page: number = 1, limit: number = 10) {
     return this.waitlistDal.paginate({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
       page,
       limit,
     });

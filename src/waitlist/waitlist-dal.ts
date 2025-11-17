@@ -24,7 +24,7 @@ export class WaitlistDal extends PrismaBaseDal<PrismaService, 'waitlistUser'> {
 
   async getAllPaginated(page: number = 1, limit: number = 10) {
     return this.paginate({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
       page,
       limit,
     });
@@ -32,7 +32,7 @@ export class WaitlistDal extends PrismaBaseDal<PrismaService, 'waitlistUser'> {
 
   async getAll() {
     return this.prisma.waitlistUser.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
     });
   }
 }

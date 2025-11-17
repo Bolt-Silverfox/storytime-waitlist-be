@@ -135,15 +135,15 @@ A JSON array containing details of all waitlist users.
     "id": "clz7m6qbc0000r6s60n3h91m4",
     "email": "john.doe@example.com",
     "name": "John Doe",
-    "createdAt": "2023-10-27T10:00:00.000Z",
-    "updatedAt": "2023-10-27T10:00:00.000Z"
+    "created_at": "2023-10-27T10:00:00.000Z",
+    "updated_at": "2023-10-27T10:00:00.000Z"
   },
   {
     "id": "clz7m6qbc0001r6s60n3h91m5",
     "email": "jane.smith@example.com",
     "name": "Jane Smith",
-    "createdAt": "2023-10-26T09:30:00.000Z",
-    "updatedAt": "2023-10-26T09:30:00.000Z"
+    "created_at": "2023-10-26T09:30:00.000Z",
+    "updated_at": "2023-10-26T09:30:00.000Z"
   }
 ]
 ```
@@ -170,15 +170,15 @@ A JSON object containing an array of waitlist users for the specified page, alon
       "id": "clz7m6qbc0002r6s60n3h91m6",
       "email": "alice.wonderland@example.com",
       "name": "Alice Wonderland",
-      "createdAt": "2023-10-25T11:45:00.000Z",
-      "updatedAt": "2023-10-25T11:45:00.000Z"
+      "created_at": "2023-10-25T11:45:00.000Z",
+      "updated_at": "2023-10-25T11:45:00.000Z"
     },
     {
       "id": "clz7m6qbc0003r6s60n3h91m7",
       "email": "bob.builder@example.com",
       "name": "Bob Builder",
-      "createdAt": "2023-10-24T14:20:00.000Z",
-      "updatedAt": "2023-10-24T14:20:00.000Z"
+      "created_at": "2023-10-24T14:20:00.000Z",
+      "updated_at": "2023-10-24T14:20:00.000Z"
     }
   ],
   "meta": {

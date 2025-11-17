@@ -3,6 +3,8 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WaitlistService } from './waitlist.service';
 import { CreateWaitlistDto } from './dto/create-waitlist.dto';
 import { WaitlistResponseDto } from './dto/waitlist-response.dto';
+import { ApiResponseDto } from './dto/api-response.dto';
+import { PaginatedResponseDto } from './dto/paginated-response.dto';
 import { WaitlistUser } from './entities/waitlist.entity';
 
 @ApiTags('waitlist')
@@ -15,7 +17,7 @@ export class WaitlistController {
   @ApiResponse({
     status: 201,
     description: 'Successfully added to waitlist',
-    type: WaitlistResponseDto,
+    type: ApiResponseDto<WaitlistResponseDto>,
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 409, description: 'Email already registered' })
@@ -30,13 +32,19 @@ export class WaitlistController {
   @ApiResponse({
     status: 200,
     description: 'List of all waitlist users',
-    type: [WaitlistUser],
+    type: ApiResponseDto<WaitlistUser[]>,
   })
   async getAllEmails(): Promise<WaitlistUser[]> {
     return this.waitlistService.getAllEmails();
   }
 
   @Get('emails/paginated')
+  @ApiOperation({ summary: 'Get paginated waitlist emails (Admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of waitlist users',
+    type: PaginatedResponseDto<WaitlistUser>,
+  })
   async getPaginatedEmails(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
