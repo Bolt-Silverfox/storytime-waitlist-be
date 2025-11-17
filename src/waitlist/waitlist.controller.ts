@@ -1,34 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WaitlistService } from './waitlist.service';
 import { CreateWaitlistDto } from './dto/create-waitlist.dto';
-import { UpdateWaitlistDto } from './dto/update-waitlist.dto';
+import { WaitlistResponseDto } from './dto/waitlist-response.dto';
 
+@ApiTags('waitlist')
 @Controller('waitlist')
 export class WaitlistController {
   constructor(private readonly waitlistService: WaitlistService) {}
 
-  @Post()
-  create(@Body() createWaitlistDto: CreateWaitlistDto) {
-    return this.waitlistService.create(createWaitlistDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.waitlistService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.waitlistService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWaitlistDto: UpdateWaitlistDto) {
-    return this.waitlistService.update(+id, updateWaitlistDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.waitlistService.remove(+id);
+  @Post('subscribe')
+  @ApiOperation({ summary: 'Subscribe to waitlist' })
+  @ApiResponse({
+    status: 201,
+    description: 'Successfully added to waitlist',
+    type: WaitlistResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  async subscribe(
+    @Body() createWaitlistDto: CreateWaitlistDto,
+  ): Promise<WaitlistResponseDto> {
+    return this.waitlistService.subscribe(createWaitlistDto);
   }
 }

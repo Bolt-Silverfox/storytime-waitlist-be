@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
+import { EmailService } from '../email/email.service';
 import { CreateWaitlistDto } from './dto/create-waitlist.dto';
-import { UpdateWaitlistDto } from './dto/update-waitlist.dto';
+import { WaitlistResponseDto } from './dto/waitlist-response.dto';
 
 @Injectable()
 export class WaitlistService {
-  create(createWaitlistDto: CreateWaitlistDto) {
-    return 'This action adds a new waitlist';
-  }
+  constructor(private readonly emailService: EmailService) {}
 
-  findAll() {
-    return `This action returns all waitlist`;
-  }
+  async subscribe(
+    createWaitlistDto: CreateWaitlistDto,
+  ): Promise<WaitlistResponseDto> {
+    const { email, name } = createWaitlistDto;
 
-  findOne(id: number) {
-    return `This action returns a #${id} waitlist`;
-  }
+    // Here you would typically save to a database
+    // For now, we'll just send the email
 
-  update(id: number, updateWaitlistDto: UpdateWaitlistDto) {
-    return `This action updates a #${id} waitlist`;
-  }
+    await this.emailService.sendWelcomeEmail(email, name);
 
-  remove(id: number) {
-    return `This action removes a #${id} waitlist`;
+    return {
+      message: 'Successfully added to waitlist',
+      email,
+      name,
+    };
   }
 }
