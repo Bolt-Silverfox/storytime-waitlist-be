@@ -8,6 +8,12 @@ import { AllExceptionsFilter } from './common/exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable CORS
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  });
+
   // Apply global response interceptor
   app.useGlobalInterceptors(new ResponseInterceptor());
 
