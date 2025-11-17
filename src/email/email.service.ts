@@ -25,15 +25,30 @@ export class EmailService {
   }
 
   private loadTemplates() {
-    // Try dist directory first (production), then src directory (development/testing)
-    let templateDir = path.join(process.cwd(), 'dist', 'waitlist', 'templates');
-    
-    if (!fs.existsSync(templateDir)) {
-      templateDir = path.join(process.cwd(), 'src', 'waitlist', 'templates');
+    // Array of possible template directory paths
+    const possiblePaths = [
+      path.join(process.cwd(), 'dist', 'waitlist', 'templates'),
+      path.join(process.cwd(), 'src', 'waitlist', 'templates'),
+      path.join(__dirname, '..', 'waitlist', 'templates'), // Relative to email service
+      path.join(__dirname, '..', '..', 'waitlist', 'templates'), // One more level up
+    ];
+
+    let templateDir: string | null = null;
+
+    // Find the first existing directory
+    for (const dir of possiblePaths) {
+      if (fs.existsSync(dir)) {
+        templateDir = dir;
+        console.log(`✓ Found template directory: ${templateDir}`);
+        break;
+      }
     }
 
-    if (!fs.existsSync(templateDir)) {
-      console.warn('Template directory not found, skipping template loading');
+    if (!templateDir) {
+      console.error(
+        '❌ Template directory not found in any of these locations:',
+      );
+      possiblePaths.forEach((p) => console.error(`   - ${p}`));
       return;
     }
 
@@ -41,18 +56,25 @@ export class EmailService {
       .readdirSync(templateDir)
       .filter((file) => file.endsWith('.hbs'));
 
+    if (templateFiles.length === 0) {
+      console.warn(`⚠ No .hbs template files found in ${templateDir}`);
+      return;
+    }
+
     templateFiles.forEach((file) => {
       const templateName = file.replace('.hbs', '');
       const templatePath = path.join(templateDir, file);
       const templateContent = fs.readFileSync(templatePath, 'utf-8');
       const compiledTemplate = handlebars.compile(templateContent);
       this.templates.set(templateName, compiledTemplate);
+      console.log(`✓ Loaded template: ${templateName}`);
     });
   }
 
   async sendWelcomeEmail(email: string, name: string): Promise<void> {
     const template = this.templates.get('welcome-email');
     if (!template) {
+      console.error('Available templates:', Array.from(this.templates.keys()));
       throw new Error('Welcome email template not found');
     }
 
