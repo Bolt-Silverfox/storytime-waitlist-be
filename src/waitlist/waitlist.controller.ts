@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WaitlistService } from './waitlist.service';
 import { CreateWaitlistDto } from './dto/create-waitlist.dto';
@@ -34,5 +34,16 @@ export class WaitlistController {
   })
   async getAllEmails(): Promise<WaitlistUser[]> {
     return this.waitlistService.getAllEmails();
+  }
+
+  @Get('emails/paginated')
+  async getPaginatedEmails(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ) {
+    return this.waitlistService.getPaginatedEmails(
+      parseInt(page),
+      parseInt(limit),
+    );
   }
 }

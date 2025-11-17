@@ -1,6 +1,6 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { EmailService } from '../email/email.service';
-import { PrismaService } from '../database/prisma.service';
+import { WaitlistDal } from './waitlist-dal';
 import { CreateWaitlistDto } from './dto/create-waitlist.dto';
 import { WaitlistResponseDto } from './dto/waitlist-response.dto';
 import { WaitlistUser } from './entities/waitlist.entity';
@@ -9,7 +9,7 @@ import { WaitlistUser } from './entities/waitlist.entity';
 export class WaitlistService {
   constructor(
     private readonly emailService: EmailService,
-    private readonly prismaService: PrismaService,
+    private readonly waitlistDal: WaitlistDal,
   ) {}
 
   async subscribe(
@@ -17,25 +17,26 @@ export class WaitlistService {
   ): Promise<WaitlistResponseDto> {
     const { email, name } = createWaitlistDto;
 
-    // Check if email already exists
-    const existingUser = await this.prismaService.waitlistUser.findUnique({
-      where: { email },
-    });
+    // Check if email already exists using DAL
+    const existingUser = await this.waitlistDal.findByEmail(email);
 
     if (existingUser) {
       throw new ConflictException('Email already registered in waitlist');
     }
 
-    // Save to database
-    const user = await this.prismaService.waitlistUser.create({
-      data: {
-        email,
-        name,
-      },
+    // Save to database using DAL
+    const user = await this.waitlistDal.createWaitlistEntry({
+      email,
+      name,
     });
 
-    // Send welcome email
-    await this.emailService.sendWelcomeEmail(email, name);
+    // Send welcome email (with error handling)
+    try {
+      await this.emailService.sendWelcomeEmail(email, name);
+    } catch (error) {
+      console.error('Failed to send welcome email:', error.message);
+      // Continue anyway - user is still added to waitlist
+    }
 
     return {
       message: 'Successfully added to waitlist',
@@ -45,8 +46,20 @@ export class WaitlistService {
   }
 
   async getAllEmails(): Promise<WaitlistUser[]> {
-    return this.prismaService.waitlistUser.findMany({
+    const result = await this.waitlistDal.paginate({
       orderBy: { createdAt: 'desc' },
+      page: 1,
+      limit: 1000,
+    });
+
+    return result.data as WaitlistUser[];
+  }
+
+  async getPaginatedEmails(page: number = 1, limit: number = 10) {
+    return this.waitlistDal.paginate({
+      orderBy: { createdAt: 'desc' },
+      page,
+      limit,
     });
   }
 }

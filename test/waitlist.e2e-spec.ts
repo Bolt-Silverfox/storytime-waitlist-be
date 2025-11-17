@@ -24,7 +24,7 @@ describe('Waitlist (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    
+
     // Apply the same configuration as main.ts
     app.useGlobalPipes(
       new ValidationPipe({
@@ -34,7 +34,7 @@ describe('Waitlist (e2e)', () => {
       }),
     );
     app.setGlobalPrefix('api/v1');
-    
+
     await app.init();
 
     prisma = app.get(PrismaService);
