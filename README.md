@@ -1,216 +1,223 @@
-# StoryTime Waitlist API 📚
+# StoryTime Waitlist API ✨
 
 ## Overview
-This is a robust backend service developed with TypeScript, NestJS, and Prisma, designed to efficiently manage waitlist subscriptions for the StoryTime platform. It handles user registration, stores data in a PostgreSQL database, and sends personalized welcome emails using React Email and Nodemailer. This project emphasizes clean architecture, API documentation, and maintainability.
+This project is a robust backend service designed to manage a waitlist for the StoryTime platform. Built with **NestJS** and **TypeScript**, it leverages **Prisma ORM** for efficient PostgreSQL database interactions and integrates **Nodemailer** with **React-Email** for dynamic email notifications. The API provides endpoints for users to subscribe to the waitlist and for administrators to manage subscriber data.
 
 ## Features
-- **Waitlist Management**: Securely add and retrieve user entries for the StoryTime platform.
-- **Automated Email Notifications**: Sends personalized welcome emails upon successful waitlist subscription using React Email and Nodemailer.
-- **Data Persistence**: Leverages PostgreSQL as the relational database and Prisma ORM for type-safe database interactions and migrations.
-- **RESTful API Design**: Provides a clean and intuitive API following REST principles, exposed via a global prefix `api/v1`.
-- **Interactive API Documentation**: Integrated Swagger UI for comprehensive API exploration and testing.
-- **Scalable Architecture**: Built with NestJS, promoting modularity, dependency injection, and enterprise-grade application development.
-- **Data Validation**: Ensures data integrity with `class-validator` and global `ValidationPipe` for all incoming requests.
+*   🚀 **Waitlist Subscription**: Allows users to securely join the StoryTime waitlist.
+*   📧 **Automated Welcome Emails**: Sends personalized welcome emails to new subscribers using React-Email templates and Nodemailer.
+*   💾 **Persistent Data Storage**: Manages waitlist user data using PostgreSQL and Prisma ORM.
+*   🛡️ **Data Validation**: Ensures data integrity with comprehensive request payload validation using `class-validator` and `class-transformer`.
+*   📊 **Paginated Admin Access**: Provides paginated access to waitlist entries for administrative purposes.
+*   ⚙️ **Global Error Handling**: Implements a centralized exception filter for consistent and informative error responses.
+*   ✅ **Standardized API Responses**: Utilizes a global interceptor to format all successful API responses uniformly.
+*   📄 **Interactive API Documentation**: Automatically generates and serves API documentation using Swagger.
 
 ## Technologies Used
-| Technology         | Description                                                                 | Link                                                        |
-| :----------------- | :-------------------------------------------------------------------------- | :---------------------------------------------------------- |
-| **NestJS**         | Progressive Node.js framework for building efficient, reliable, and scalable server-side applications. | [NestJS](https://nestjs.com/)                               |
-| **TypeScript**     | Superset of JavaScript that adds optional static typing to the language.    | [TypeScript](https://www.typescriptlang.org/)               |
-| **Prisma**         | Next-generation Node.js and TypeScript ORM for robust database access.      | [Prisma](https://www.prisma.io/)                            |
-| **PostgreSQL**     | Powerful, open-source object-relational database system.                   | [PostgreSQL](https://www.postgresql.org/)                   |
-| **Nodemailer**     | Module for Node.js applications to allow easy email sending.               | [Nodemailer](https://nodemailer.com/)                       |
-| **React Email**    | Write and style your emails using React components for rich templates.      | [React Email](https://react.email/)                         |
-| **Swagger UI**     | Visualize and interact with the API's resources directly from the browser.  | [Swagger](https://swagger.io/)                              |
-| **ESLint**         | Pluggable linting utility for JavaScript and TypeScript.                    | [ESLint](https://eslint.org/)                               |
-| **Prettier**       | An opinionated code formatter ensuring consistent code style.                | [Prettier](https://prettier.io/)                            |
-| **Jest**           | Delightful JavaScript Testing Framework with a focus on simplicity.         | [Jest](https://jestjs.io/)                                  |
+| Technology | Description |
+| :--------- | :---------- |
+| **[NestJS](https://nestjs.com/)** | A progressive Node.js framework for building efficient, reliable, and scalable server-side applications. |
+| **[TypeScript](https://www.typescriptlang.org/)** | A strongly typed superset of JavaScript that compiles to plain JavaScript, enhancing code quality and developer productivity. |
+| **[Prisma ORM](https://www.prisma.io/)** | A next-generation ORM for Node.js and TypeScript, offering type-safe database access and migrations. |
+| **[PostgreSQL](https://www.postgresql.org/)** | A powerful, open-source object-relational database system known for its reliability, feature robustness, and performance. |
+| **[Nodemailer](https://nodemailer.com/)** | A module for Node.js applications to allow easy email sending. |
+| **[React-Email](https://react.email/)** | A framework for building and sending beautiful emails with React and Tailwind CSS. |
+| **[Swagger (OpenAPI)](https://swagger.io/)** | A set of open-source tools built around the OpenAPI Specification for designing, building, and documenting RESTful APIs. |
+| **[Docker](https://www.docker.com/)** | A platform for developing, shipping, and running applications in containers (implicitly used for local database setup). |
 
 ## Getting Started
 
 ### Installation
-To get a local copy of this project up and running, follow these step-by-step instructions.
+To get this project up and running locally, follow these steps:
 
-- ⚙️ **Clone the Repository**: Start by cloning the project to your local machine.
-  ```bash
-  git clone https://github.com/Bolt-Silverfox/storytime-waitlist-be.git
-  cd storytime-waitlist-be
-  ```
-- 📦 **Install Dependencies**: Install all necessary project dependencies using npm or yarn.
-  ```bash
-  npm install
-  # or
-  yarn install
-  ```
-- 🛠️ **Generate Prisma Client**: Ensure the Prisma client is generated to interact with your database.
-  ```bash
-  npm run db:generate
-  ```
-- 💾 **Run Database Migrations**: Before starting the application, apply the database schema migrations. Ensure your PostgreSQL database is running and accessible via the `DATABASE_URL` environment variable.
-  ```bash
-  npm run db:migrate
-  ```
+1.  **Clone the Repository**:
+    ```bash
+    git clone https://github.com/Bolt-Silverfox/storytime-waitlist-be.git
+    cd storytime-waitlist-be
+    ```
+
+2.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+3.  **Setup Environment Variables**:
+    Create a `.env` file in the root of the project based on the `.env.example` (or the list below) and fill in the required values.
+
+4.  **Generate Prisma Client & Run Migrations**:
+    ```bash
+    npm run db:generate
+    npm run db:migrate
+    ```
+    Ensure your PostgreSQL database is running and accessible via the `DATABASE_URL`.
 
 ### Environment Variables
-The application requires several environment variables to function correctly. Create a `.env` file in the project root directory and populate it with the following:
+All required environment variables are listed below with examples:
 
-| Variable        | Example                                                | Description                                    |
-| :-------------- | :----------------------------------------------------- | :--------------------------------------------- |
-| `DATABASE_URL`  | `postgresql://user:pass@localhost:5432/storytime_db?schema=public` | The connection string for your PostgreSQL database. |
-| `EMAIL_HOST`    | `smtp.gmail.com`                                       | The SMTP host for sending emails (e.g., Gmail's SMTP). |
-| `EMAIL_PORT`    | `587`                                                  | The SMTP port (commonly `587` for TLS or `465` for SSL). |
-| `EMAIL_USER`    | `your-email@gmail.com`                                 | The username for SMTP authentication (your email address). |
-| `EMAIL_PASS`    | `your-app-specific-password`                           | The password or app-specific password for SMTP authentication. |
-| `EMAIL_FROM`    | `noreply@storytime.com`                                | The sender email address that appears in outbound emails. |
+```dotenv
+# Database Configuration
+DATABASE_URL="postgresql://user:password@localhost:5432/storytime_waitlist_db?schema=public"
+
+# Application Configuration
+PORT=3000
+FRONTEND_URL="http://localhost:3000" # URL of the frontend client for CORS
+NODE_ENV="production"
+
+# Email Service Configuration
+MAIL_HOST="smtp.gmail.com"
+MAIL_PORT=587 # Common ports: 465 (SSL), 587 (TLS)
+MAIL_USERNAME="your-email@example.com"
+MAIL_PASSWORD="your-email-app-password" # Use an app password if using services like Gmail
+MAIL_FROM_ADDRESS="noreply@storytime.com"
+MAIL_FROM_NAME="StoryTime"
+MAIL_ENCRYPTION="TLS" # Options: TLS, SSL, NONE
+```
 
 ## Usage
-After successfully completing the installation and environment variable setup, you can run the application.
 
-- ▶️ **Run in Development Mode**: For development purposes, you can start the application with live-reloading.
-  ```bash
-  npm run start:dev
-  ```
-  The application will be accessible at `http://localhost:3000`, and any code changes will automatically restart the server.
+After completing the installation and setting up environment variables, you can run the application:
 
-- 🚀 **Run in Production Mode**: To run the optimized, compiled version of the application for production:
-  First, build the project:
-  ```bash
-  npm run build
-  ```
-  Then, start the compiled application:
-  ```bash
-  npm run start:prod
-  ```
-  The production server will also be available at `http://localhost:3000`.
+1.  **Start the Development Server**:
+    ```bash
+    npm run start:dev
+    ```
+    The application will run in watch mode, automatically reloading on code changes.
 
-- 📄 **Access API Documentation**: The interactive Swagger UI documentation for all API endpoints will be available at:
-  ```
-  http://localhost:3000/docs
-  ```
+2.  **Access the API**:
+    The API will be available at `http://localhost:3000/api/v1` (or your configured `PORT`).
+
+3.  **Access Swagger API Documentation**:
+    While the development server is running, you can view the interactive API documentation at `http://localhost:3000/docs`. This interface allows you to explore endpoints, understand request/response schemas, and even test the API directly from your browser.
 
 ## API Documentation
 
 ### Base URL
-`http://localhost:3000/api/v1`
+The base URL for all API endpoints is `/api/v1`.
 
 ### Endpoints
 
 #### POST /waitlist/subscribe
-Registers a new user to the StoryTime waitlist. Upon successful subscription, a welcome email is sent to the provided address.
+Subscribes a new user to the StoryTime waitlist and sends a welcome email.
 
 **Request**:
-Registers a user with their email and name.
 ```json
 {
   "email": "john.doe@example.com",
   "name": "John Doe"
 }
 ```
-
 **Response**:
-Indicates successful subscription to the waitlist.
 ```json
 {
-  "message": "Successfully added to waitlist",
-  "email": "john.doe@example.com",
-  "name": "John Doe"
+  "status": "success",
+  "data": {
+    "email": "john.doe@example.com",
+    "name": "John Doe"
+  },
+  "message": "Operation completed successfully",
+  "error": null
 }
 ```
-
 **Errors**:
-- `400 Bad Request`: Occurs if the request payload is invalid (e.g., malformed email, missing name, or `name` not meeting length requirements).
-- `409 Conflict`: Returned if the provided email address is already registered in the waitlist.
+-   `400 Bad Request`: Invalid input provided (e.g., missing fields, invalid email format).
+-   `409 Conflict`: Email address is already registered in the waitlist.
+-   `500 Internal Server Error`: An unexpected server error occurred.
 
 #### GET /waitlist/emails
-Retrieves a list of all users currently registered on the waitlist. This endpoint is typically intended for administrative access.
+Retrieves a list of all users subscribed to the waitlist. (Admin access typically required).
 
 **Request**:
-_No request body required._
+No request body.
 
 **Response**:
-A JSON array containing details of all waitlist users.
-```json
-[
-  {
-    "id": "clz7m6qbc0000r6s60n3h91m4",
-    "email": "john.doe@example.com",
-    "name": "John Doe",
-    "created_at": "2023-10-27T10:00:00.000Z",
-    "updated_at": "2023-10-27T10:00:00.000Z"
-  },
-  {
-    "id": "clz7m6qbc0001r6s60n3h91m5",
-    "email": "jane.smith@example.com",
-    "name": "Jane Smith",
-    "created_at": "2023-10-26T09:30:00.000Z",
-    "updated_at": "2023-10-26T09:30:00.000Z"
-  }
-]
-```
-
-**Errors**:
-- _(No explicit API error responses are defined in the application logic for this endpoint, beyond generic server errors.)_
-
-#### GET /waitlist/emails/paginated
-Retrieves a paginated list of waitlist users, allowing for efficient fetching of large datasets.
-
-**Request**:
-_Query Parameters:_
-- `page`: (Optional) Specifies the page number to retrieve. Defaults to `1` if not provided.
-- `limit`: (Optional) Specifies the maximum number of items per page. Defaults to `10` if not provided.
-
-_Example Query:_ `/api/v1/waitlist/emails/paginated?page=2&limit=5`
-
-**Response**:
-A JSON object containing an array of waitlist users for the specified page, along with pagination metadata.
 ```json
 {
+  "status": "success",
   "data": [
     {
-      "id": "clz7m6qbc0002r6s60n3h91m6",
-      "email": "alice.wonderland@example.com",
-      "name": "Alice Wonderland",
-      "created_at": "2023-10-25T11:45:00.000Z",
-      "updated_at": "2023-10-25T11:45:00.000Z"
+      "id": "clxb6x02h0000j5b8b9j0l0i5",
+      "email": "john.doe@example.com",
+      "name": "John Doe",
+      "created_at": "2023-10-26T10:00:00.000Z",
+      "updated_at": "2023-10-26T10:00:00.000Z"
     },
     {
-      "id": "clz7m6qbc0003r6s60n3h91m7",
-      "email": "bob.builder@example.com",
-      "name": "Bob Builder",
-      "created_at": "2023-10-24T14:20:00.000Z",
-      "updated_at": "2023-10-24T14:20:00.000Z"
+      "id": "clxb6x02h0001j5b8b9j0l0i6",
+      "email": "jane.smith@example.com",
+      "name": "Jane Smith",
+      "created_at": "2023-10-25T09:30:00.000Z",
+      "updated_at": "2023-10-25T09:30:00.000Z"
     }
   ],
-  "meta": {
-    "total": 100,
-    "lastPage": 10,
-    "currentPage": 2,
-    "perPage": 10
+  "message": "Operation completed successfully",
+  "error": null
+}
+```
+**Errors**:
+-   `500 Internal Server Error`: An unexpected server error occurred.
+
+#### GET /waitlist/emails/paginated
+Retrieves a paginated list of waitlist users, useful for administrative interfaces.
+
+**Request**:
+Query Parameters:
+-   `page`: (Optional) The page number to retrieve. Defaults to `1`.
+-   `limit`: (Optional) The maximum number of items per page. Defaults to `10`.
+
+Example: `/api/v1/waitlist/emails/paginated?page=2&limit=5`
+
+**Response**:
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "clxb6x02h0002j5b8b9j0l0i7",
+      "email": "user3@example.com",
+      "name": "User Three",
+      "created_at": "2023-10-24T11:45:00.000Z",
+      "updated_at": "2023-10-24T11:45:00.000Z"
+    },
+    {
+      "id": "clxb6x02h0003j5b8b9j0l0i8",
+      "email": "user4@example.com",
+      "name": "User Four",
+      "created_at": "2023-10-23T14:00:00.000Z",
+      "updated_at": "2023-10-23T14:00:00.000Z"
+    }
+  ],
+  "message": "Operation completed successfully",
+  "error": null,
+  "pagination": {
+    "page": 2,
+    "limit": 2,
+    "total": 5,
+    "total_pages": 3,
+    "has_next": true,
+    "has_previous": true
   }
 }
 ```
-
 **Errors**:
-- _(No explicit API error responses are defined in the application logic for this endpoint, beyond generic server errors.)_
+-   `500 Internal Server Error`: An unexpected server error occurred.
 
 ## License
-This project is licensed under the UNLICENSED license.
+This project is currently unlicensed. Please refer to the `package.json` for details.
 
 ## Author Info
+Developed by a passionate software engineer.
+*   **LinkedIn**: [Your LinkedIn Profile]
+*   **Twitter**: [Your Twitter Handle]
+*   **Portfolio**: [Your Personal Website/Portfolio]
 
-Connect with me:
+---
 
-- LinkedIn: [Your LinkedIn Profile](https://www.linkedin.com/in/yourusername/)
-- Twitter: [@YourTwitterHandle](https://twitter.com/YourTwitterHandle)
-- Portfolio: [Your Portfolio Website](https://www.yourportfolio.com)
-
-## Badges
-[![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
-[![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)](https://www.prisma.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Node.js](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Swagger](https://img.shields.io/badge/Swagger-%2385EA2D.svg?style=for-the-badge&logo=swagger&logoColor=white)](https://swagger.io/)
-[![React Email](https://img.shields.io/badge/React_Email-000000?style=for-the-badge&logo=react&logoColor=white)](https://react.email/)
+[![Nodemailer](https://img.shields.io/badge/Nodemailer-1A1A1A?style=for-the-badge&logo=nodemailer&logoColor=white)](https://nodemailer.com/)
+[![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](https://swagger.io/)
+[![GitHub Actions CI](https://img.shields.io/badge/CI/CD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/Bolt-Silverfox/storytime-waitlist-be/actions)
 
 [![Readme was generated by Dokugen](https://img.shields.io/badge/Readme%20was%20generated%20by-Dokugen-brightgreen)](https://www.npmjs.com/package/dokugen)

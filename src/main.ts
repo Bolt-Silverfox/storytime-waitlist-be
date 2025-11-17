@@ -39,9 +39,15 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   app.setGlobalPrefix('api/v1');
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
 
-  await app.listen(3000);
-  console.log('Application is running on: http://localhost:3000');
-  console.log('Swagger docs available at: http://localhost:3000/docs');
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`Application is running on port: ${port}`);
+    console.log(`Swagger docs available at: /docs`);
+  } else {
+    console.log('Application is running on: http://localhost:3000');
+    console.log('Swagger docs available at: http://localhost:3000/docs');
+  }
 }
 bootstrap();
