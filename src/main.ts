@@ -1,11 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ResponseInterceptor } from './common/response.interceptor';
 import { AllExceptionsFilter } from './common/exception.filter';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS
@@ -27,6 +29,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.setGlobalPrefix('api/v1');
 
   const config = new DocumentBuilder()
     .setTitle('StoryTime Waitlist API')
@@ -38,10 +41,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  app.setGlobalPrefix('api/v1');
-
   await app.listen(3000);
-  console.log('Application is running on: http://localhost:3000');
-  console.log('Swagger docs available at: http://localhost:3000/docs');
+  logger.log('Application is running on: http://localhost:3000');
+  logger.log('Swagger docs available at: http://localhost:3000/docs');
 }
 bootstrap();
