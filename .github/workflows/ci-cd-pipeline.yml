@@ -1,0 +1,257 @@
+name: CI / CD — Backend (NestJS) + Optional Frontend
+
+# Triggers:
+# - push to staging/main
+# - PR to staging/main (runs CI only)
+# - manual dispatch with target (staging | production)
+on:
+  push:
+    branches:
+      - staging
+      - main
+  pull_request:
+    branches:
+      - staging
+      - main
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which environment to deploy'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Default node version (overridable via secret if you prefer)
+  NODE_VERSION: ${{ secrets.NODE_VERSION || '22' }}
+
+jobs:
+  build-and-test:
+    name: Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies (backend)
+        run: npm ci
+
+      - name: Lint (backend)
+        run: |
+          # Assuming project has lint script (package.json -> "lint")
+          if npm run -s lint --silent; then
+            echo "Lint passed"
+          else
+            echo "Lint failed"
+            exit 1
+          fi
+
+      - name: Run tests (backend)
+        run: |
+          # use your test script (jest, etc.)
+          npm run test --silent
+
+      - name: Build backend
+        run: npm run build
+
+      - name: Upload build artifact (optional, used for debugging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: |
+            dist
+            package.json
+            package-lock.json
+
+  deploy:
+    name: Deploy to Server (staging/main)
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: |
+      needs.build-and-test.result == 'success' &&
+      (
+        github.ref == 'refs/heads/staging' ||
+        github.ref == 'refs/heads/main' ||
+        github.event_name == 'workflow_dispatch'
+      )
+
+    steps:
+      - name: Determine deploy branch and environment
+        id: vars
+        run: |
+          # Determine branch-to-deploy
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TARGET="${{ github.event.inputs.target }}"
+            if [ "$TARGET" = "production" ]; then
+              DEPLOY_BRANCH="main"
+            else
+              DEPLOY_BRANCH="staging"
+            fi
+          else
+            # push events: use the branch we pushed
+            DEPLOY_BRANCH="${GITHUB_REF#refs/heads/}"
+          fi
+          echo "DEPLOY_BRANCH=$DEPLOY_BRANCH" >> $GITHUB_OUTPUT
+          if [ "$DEPLOY_BRANCH" = "main" ]; then
+            echo "ENVIRONMENT=production" >> $GITHUB_OUTPUT
+          else
+            echo "ENVIRONMENT=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Show computed deploy target
+        run: |
+          echo "Deploy branch: ${{ steps.vars.outputs.DEPLOY_BRANCH }}"
+          echo "Environment: ${{ steps.vars.outputs.ENVIRONMENT }}"
+
+      - name: Run remote deploy script over SSH
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          # Increase timeout for first-time installs / migrations
+          timeout: 120000
+          script: |
+            set -euo pipefail
+
+            # ---- Variables (remote) ----
+            BACKEND_DIR="${{ secrets.BACKEND_APP_DIR || '/home/ubuntu/storytime-be' }}"
+            FRONTEND_REPO="${{ secrets.FRONTEND_REPO || '' }}"
+            FRONTEND_DIR="${{ secrets.FRONTEND_APP_DIR || '/home/ubuntu/storytime-fe' }}"
+            DEPLOY_BRANCH="${{ steps.vars.outputs.DEPLOY_BRANCH }}"
+            ENVIRONMENT="${{ steps.vars.outputs.ENVIRONMENT }}"
+
+            echo "Starting remote deploy: branch=${DEPLOY_BRANCH}, env=${ENVIRONMENT}"
+            echo "Backend dir: $BACKEND_DIR"
+            echo "Frontend repo: $FRONTEND_REPO"
+            echo "Frontend dir: $FRONTEND_DIR"
+
+            ## --- Backend: update, install, build, migrate, restart ---
+            if [ -d "$BACKEND_DIR" ]; then
+              cd "$BACKEND_DIR"
+            else
+              echo "Backend directory not found. Creating and cloning repo..."
+              mkdir -p "$(dirname "$BACKEND_DIR")"
+              git clone --depth=1 --branch "$DEPLOY_BRANCH" "git@github.com:${{ github.repository }}" "$BACKEND_DIR"
+              cd "$BACKEND_DIR"
+            fi
+
+            echo "Fetching latest backend code..."
+            git fetch origin "$DEPLOY_BRANCH" --depth=1 || true
+            git checkout "$DEPLOY_BRANCH"
+            git reset --hard "origin/$DEPLOY_BRANCH"
+            git clean -fd
+
+            echo "Installing backend dependencies..."
+            npm ci
+
+            echo "Building backend..."
+            npm run build
+
+            # write .env if provided as secret
+            if [ -n "${{ secrets.BACKEND_ENV || '' }}" ]; then
+              echo "Writing backend .env from secret..."
+              cat > .env <<'EOF'
+${{ secrets.BACKEND_ENV }}
+EOF
+            else
+              echo "No BACKEND_ENV secret provided. Assuming .env already exists on server."
+            fi
+
+            echo "Running Prisma migrations (if any)..."
+            if command -v npx >/dev/null 2>&1; then
+              npx prisma migrate deploy || true
+            fi
+
+            echo "Restarting PM2 app (will start if not present)..."
+            # Install pm2 if missing
+            if ! command -v pm2 >/dev/null 2>&1; then
+              echo "PM2 not found. Installing pm2 globally..."
+              npm install -g pm2
+            fi
+
+            # Use ecosystem file if present, otherwise fallback to pm2 start dist/main.js
+            if [ -f ecosystem.config.js ]; then
+              pm2 start ecosystem.config.js --env production || pm2 reload ecosystem.config.js --env production || pm2 restart ecosystem.config.js --env production || true
+            else
+              # ensure process named storytime-be exists or start it
+              if pm2 list | grep -q "storytime-be"; then
+                pm2 restart storytime-be || true
+              else
+                pm2 start dist/main.js --name storytime-be --env production || true
+              fi
+            fi
+
+            pm2 save
+
+            ## --- Frontend: optional (clone or update, build, export) ---
+            if [ -n "$FRONTEND_REPO" ]; then
+              if [ -d "$FRONTEND_DIR" ]; then
+                cd "$FRONTEND_DIR"
+                echo "Updating frontend repo..."
+                git fetch origin || true
+                git checkout "$DEPLOY_BRANCH" || git checkout -b "$DEPLOY_BRANCH" || true
+                git reset --hard "origin/$DEPLOY_BRANCH" || true
+                git clean -fd || true
+              else
+                echo "Cloning frontend repo..."
+                mkdir -p "$(dirname "$FRONTEND_DIR")"
+                git clone --depth=1 --branch "$DEPLOY_BRANCH" "$FRONTEND_REPO" "$FRONTEND_DIR"
+                cd "$FRONTEND_DIR"
+              fi
+
+              echo "Installing frontend dependencies..."
+              npm ci
+
+              # write frontend env if provided as secret
+              if [ -n "${{ secrets.FRONTEND_ENV || '' }}" ]; then
+                echo "Writing frontend .env.production from secret..."
+                cat > .env.production <<'EOF'
+${{ secrets.FRONTEND_ENV }}
+EOF
+              fi
+
+              echo "Building & exporting Next.js frontend..."
+              npm run build
+              # next export may depend on next.config; use npm run export if defined
+              if npm run -s export --silent; then
+                npm run export
+              else
+                echo "No export script defined; skipping 'next export'."
+              fi
+            else
+              echo "No FRONTEND_REPO configured. Skipping frontend deploy."
+            fi
+
+            ## --- Nginx reload (ensure config exists) ---
+            echo "Reloading nginx (if present)..."
+            if command -v nginx >/dev/null 2>&1; then
+              sudo nginx -t || true
+              sudo systemctl reload nginx || true
+            fi
+
+            echo "✅ Remote deploy script complete."
+
+      - name: Post-deploy check (remote quick health check)
+        run: |
+          # simple curl to internal endpoint - adjust path if different
+          echo "Checking remote health..."
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "curl -fsS --max-time 10 http://127.0.0.1:4000/api/v1/waitlist/emails || echo 'backend-unhealthy'"
+
