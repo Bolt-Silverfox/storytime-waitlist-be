@@ -18,7 +18,8 @@ export class WaitlistService {
     const { email, name } = createWaitlistDto;
 
     // Check if email already exists using DAL
-    const existingUser = await this.waitlistDal.findByEmail(email);
+    const existingUser =
+      await this.waitlistDal.findByEmail(email);
 
     if (existingUser) {
       throw new ConflictException('Email already registered in waitlist');
@@ -33,8 +34,9 @@ export class WaitlistService {
     // Send welcome email (with error handling)
     try {
       await this.emailService.sendWelcomeEmail(email, name);
-    } catch (error) {
-      console.error('Failed to send welcome email:', error.message);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      console.error('Failed to send welcome email:', errMsg);
       // Continue anyway - user is still added to waitlist
     }
 

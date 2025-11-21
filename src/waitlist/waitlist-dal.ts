@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable } from '@nestjs/common';
 import { PrismaBaseDal } from '@hng-sdk/orm';
 import { PrismaService } from '../database/prisma.service';
@@ -11,13 +15,13 @@ export class WaitlistDal extends PrismaBaseDal<PrismaService, 'waitlistUser'> {
   }
 
   async findByEmail(email: string) {
-    return this.prisma.waitlistUser.findUnique({
+    return await this.prisma.waitlistUser.findUnique({
       where: { email },
     });
   }
 
   async createWaitlistEntry(data: CreateWaitlistDto) {
-    return this.prisma.waitlistUser.create({
+    return await this.prisma.waitlistUser.create({
       data: data as Prisma.WaitlistUserCreateInput,
     });
   }
@@ -31,7 +35,7 @@ export class WaitlistDal extends PrismaBaseDal<PrismaService, 'waitlistUser'> {
   }
 
   async getAll() {
-    return this.prisma.waitlistUser.findMany({
+    return await this.prisma.waitlistUser.findMany({
       orderBy: { created_at: 'desc' },
     });
   }
