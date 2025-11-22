@@ -61,7 +61,7 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
-          APP_DIR: /home/${{ secrets.SERVER_USER }}/storytime-be
+          APP_DIR: /home/${{ secrets.SERVER_USER }}/storytime-waitlist-be
         run: |
           set -e
 
@@ -76,7 +76,7 @@ jobs:
             set -e
             echo "🚀 Starting STAGING deployment..."
 
-            cd ~/storytime-waitlist-be
+            cd /var/www/storytime-waitlist-be
 
             git fetch origin
             git reset --hard origin/staging
@@ -127,7 +127,7 @@ jobs:
             set -e
             echo "🚀 Starting PRODUCTION deployment..."
 
-            cd ~/storytime-waitlist-be
+            cd /var/www/storytime-waitlist-be
 
             git fetch origin
             git reset --hard origin/main
