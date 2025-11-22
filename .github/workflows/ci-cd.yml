@@ -76,7 +76,7 @@ jobs:
             set -e
             echo "🚀 Starting STAGING deployment..."
 
-            cd ~/storytime-be
+            cd ~/storytime-waitlist-be
 
             git fetch origin
             git reset --hard origin/staging
@@ -127,7 +127,7 @@ jobs:
             set -e
             echo "🚀 Starting PRODUCTION deployment..."
 
-            cd ~/storytime-be
+            cd ~/storytime-waitlist-be
 
             git fetch origin
             git reset --hard origin/main
