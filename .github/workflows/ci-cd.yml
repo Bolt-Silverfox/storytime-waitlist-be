@@ -1,5 +1,7 @@
 name: CI/CD Pipeline
 
+# ───────────────────────────── # Trigger the workflow # ─────────────────────────────
+
 on:
   push:
     branches:
@@ -22,6 +24,8 @@ on:
 
 jobs:
 
+# ───────────────────────────── # 1. Run Tests # ─────────────────────────────
+  
   test:
     name: Run Backend Tests
     runs-on: self-hosted
@@ -40,7 +44,9 @@ jobs:
 
       - name: Run tests
         run: |
-          npm test || echo "⚠ No tests found"
+          npm test
+
+# ───────────────────────────── # 2. Deploy to Staging # ─────────────────────────────
 
   deploy-staging:
     name: Deploy to Staging (Auto)
@@ -91,7 +97,8 @@ jobs:
 
             echo "✅ Staging deployment completed!"
           EOF
-
+# ───────────────────────────── # 3. Deploy to Production # ─────────────────────────────
+  
   deploy-production:
     name: Deploy to Production (Manual)
     runs-on: self-hosted
