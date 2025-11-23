@@ -32,4 +32,21 @@ export class EmailService {
       html,
     });
   }
+
+  async sendContactEmail(name: string, senderEmail: string, message: string): Promise<void> {
+    const html = `
+      <h2>New Contact Message</h2>
+      <p><b>From:</b> ${name} (${senderEmail})</p>
+      <p><b>Message:</b></p>
+      <p>${message}</p>
+    `;
+
+    await this.transporter.sendMail({
+      from: `"StoryTime Contact" <${this.configService.get('MAIL_FROM_ADDRESS')}>`,
+      to: this.configService.get('MAIL_FROM_ADDRESS'),
+      subject: 'New Contact Request',
+      html,
+    });
+    console.log('Contact email sent successfully!');
+}
 }
