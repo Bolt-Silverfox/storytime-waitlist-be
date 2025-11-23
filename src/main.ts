@@ -38,7 +38,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  app.setGlobalPrefix('api/v1');
+  //app.setGlobalPrefix('api/v1');
 
   await app.listen(3000);
   console.log('Application is running on: http://localhost:3000');

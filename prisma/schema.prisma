@@ -16,3 +16,11 @@ model WaitlistUser {
 
   @@map("waitlist_user")
 }
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+}
