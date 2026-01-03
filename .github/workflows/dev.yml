@@ -36,10 +36,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: development
     needs: test
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_FILE }}" > .env
 
       - name: Setup SSH key
         run: |
