@@ -42,6 +42,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm run build
+
       - name: Create .env file
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
@@ -77,10 +93,7 @@ jobs:
             pnpm db:migrate
 
             echo "Running Prisma generate..."
-            pnpm db:generate 
-
-            echo "🏗 Building backend..."
-            pnpm run build
+            pnpm db:generate
 
             echo "🚀 Restarting PM2 service..."
             pm2 restart ecosystem.config.js || pm2 start ecosystem.config.js
