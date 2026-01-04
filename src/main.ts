@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
@@ -48,7 +49,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   await app.listen(port);
-  logger.log(`Application is running on: http://localhost:${port}`);
-  logger.log(`Swagger docs available at: http://localhost:${port}/docs`);
+  
+  console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`Swagger docs available at: http://localhost:${port}/docs`);
+
 }
 bootstrap();
