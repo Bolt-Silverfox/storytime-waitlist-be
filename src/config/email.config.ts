@@ -1,9 +1,11 @@
 export default () => ({
   email: {
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || '587', 10),
-    user: process.env.EMAIL_USER || '',
-    pass: process.env.EMAIL_PASS || '',
-    from: process.env.EMAIL_FROM || 'noreply@storytime.com',
+    host: process.env.MAIL_HOST,
+    port: parseInt(process.env.MAIL_PORT || '587', 10),
+    user: process.env.MAIL_USERNAME,
+    pass: process.env.MAIL_PASSWORD,
+    from: process.env.MAIL_FROM_ADDRESS,
+    fromName: process.env.MAIL_FROM_NAME,
+    encryption: process.env.MAIL_ENCRYPTION,
   },
 });
