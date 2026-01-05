@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Load shell profile for pnpm/node PATH
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$HOME/.bashrc" ] && \. "$HOME/.bashrc"
+
 echo "📦 Installing dependencies..."
 pnpm install --frozen-lockfile
 
