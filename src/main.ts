@@ -15,10 +15,31 @@ async function bootstrap() {
   const port = configService.get('PORT', { infer: true });
   const frontendUrl = configService.get('FRONTEND_URL', { infer: true });
 
-  // Enable CORS
+  // Enable CORS with protection
   app.enableCors({
-    origin: frontendUrl || 'http://localhost:3000',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: (origin, callback) => {
+      // Match storytimeapp.me and all subdomains (e.g., www.storytimeapp.me, app.storytimeapp.me)
+      const storytimePattern = /^https?:\/\/([a-z0-9-]+\.)*storytimeapp\.me$/i;
+
+      const allowedOrigins = frontendUrl
+        ? frontendUrl.split(',').map((o) => o.trim())
+        : ['http://localhost:3000'];
+
+      // Allow requests with no origin (mobile apps, Postman, etc.) in development
+      if (!origin && configService.get('NODE_ENV') === 'development') {
+        return callback(null, true);
+      }
+
+      if (!origin || storytimePattern.test(origin) || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    credentials: true,
+    maxAge: 86400, // 24 hours preflight cache
   });
 
   // Apply global response interceptor
