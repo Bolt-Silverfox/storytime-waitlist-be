@@ -5,6 +5,7 @@ import {
   Container,
   Text,
   Heading,
+  Link,
 } from '@react-email/components';
 import { Tailwind } from '@react-email/tailwind';
 
@@ -24,30 +25,87 @@ export const StorytimeWelcome = ({
         <Body className="bg-gray-100">
           <Container className="mx-auto bg-white p-8 max-w-2xl">
             <Heading className="text-2xl text-center text-blue-600 mb-6">
-              🎉 Welcome to StoryTime!
+              Welcome to StoryTime!
             </Heading>
 
             <Text className="text-lg text-gray-800 mb-4">Hi {username},</Text>
 
             <Text className="text-gray-700 mb-4">
-              Thank you for joining our waitlist! We're excited to have you as
-              part of the StoryTime community.
+              Welcome to StoryTime, and thanks for joining our waitlist.
             </Text>
 
             <Text className="text-gray-700 mb-4">
-              You're now among the first to know when we launch our interactive
-              storytelling platform for kids. We'll keep you updated on our
-              progress and let you know as soon as you can start creating
-              magical stories with your children.
+              We're designing a storytelling experience where every story feels
+              personal—crafted to support your child's curiosity, learning, and
+              imagination.
+            </Text>
+
+            <Text className="text-gray-700 mb-4">
+              As a waitlist member, you'll get early access, launch updates, and
+              first looks at what we're creating.
             </Text>
 
             <Text className="text-gray-700 mb-6">
-              In the meantime, feel free to share StoryTime with other parents
-              and educators who might be interested!
+              Feel free to share StoryTime with parents or educators who believe
+              in the power of stories too.
             </Text>
 
-            <Text className="text-gray-800">
-              Best regards,
+            <Text className="text-gray-700 mb-4 font-semibold">
+              Stay connected with us:
+            </Text>
+
+            <Text className="text-gray-700 mb-2">
+              Instagram:{' '}
+              <Link
+                href="https://www.instagram.com/teamstorytimehq/"
+                className="text-blue-600 underline"
+              >
+                https://www.instagram.com/teamstorytimehq/
+              </Link>
+            </Text>
+
+            <Text className="text-gray-700 mb-2">
+              Facebook:{' '}
+              <Link
+                href="https://www.facebook.com/profile.php?id=61585584201713"
+                className="text-blue-600 underline"
+              >
+                https://www.facebook.com/profile.php?id=61585584201713
+              </Link>
+            </Text>
+
+            <Text className="text-gray-700 mb-2">
+              LinkedIn:{' '}
+              <Link
+                href="https://www.linkedin.com/company/storytimehq/"
+                className="text-blue-600 underline"
+              >
+                https://www.linkedin.com/company/storytimehq/
+              </Link>
+            </Text>
+
+            <Text className="text-gray-700 mb-2">
+              Twitter/X:{' '}
+              <Link
+                href="https://x.com/storytimehq"
+                className="text-blue-600 underline"
+              >
+                https://x.com/storytimehq
+              </Link>
+            </Text>
+
+            <Text className="text-gray-700 mb-6">
+              TikTok:{' '}
+              <Link
+                href="https://www.tiktok.com/@teamstorytimehq"
+                className="text-blue-600 underline"
+              >
+                https://www.tiktok.com/@teamstorytimehq
+              </Link>
+            </Text>
+
+            <Text className="text-gray-800 mt-6">
+              Warmly,
               <br />
               The StoryTime Team
             </Text>
