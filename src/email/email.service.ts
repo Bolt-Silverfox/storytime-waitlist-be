@@ -26,7 +26,7 @@ export class EmailService {
     const html = await render(StorytimeWelcome({ username: name, email }));
 
     await this.transporter.sendMail({
-      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'noreply@storytime.com')}>`,
+      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'hello@storytimeapp.me')}>`,
       to: email,
       subject: 'Welcome to StoryTime Waitlist!',
       html,
