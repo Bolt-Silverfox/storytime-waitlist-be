@@ -60,7 +60,7 @@ export const StorytimeWelcome = ({
                 href="https://www.instagram.com/teamstorytimehq/"
                 className="text-blue-600 underline"
               >
-                https://www.instagram.com/teamstorytimehq/
+                @teamstorytimehq
               </Link>
             </Text>
 
@@ -70,7 +70,7 @@ export const StorytimeWelcome = ({
                 href="https://www.facebook.com/profile.php?id=61585584201713"
                 className="text-blue-600 underline"
               >
-                https://www.facebook.com/profile.php?id=61585584201713
+                @StoryTimeHQ
               </Link>
             </Text>
 
@@ -80,7 +80,7 @@ export const StorytimeWelcome = ({
                 href="https://www.linkedin.com/company/storytimehq/"
                 className="text-blue-600 underline"
               >
-                https://www.linkedin.com/company/storytimehq/
+                @storytimehq
               </Link>
             </Text>
 
@@ -90,7 +90,7 @@ export const StorytimeWelcome = ({
                 href="https://x.com/storytimehq"
                 className="text-blue-600 underline"
               >
-                https://x.com/storytimehq
+                @storytimehq
               </Link>
             </Text>
 
@@ -100,7 +100,7 @@ export const StorytimeWelcome = ({
                 href="https://www.tiktok.com/@teamstorytimehq"
                 className="text-blue-600 underline"
               >
-                https://www.tiktok.com/@teamstorytimehq
+                @teamstorytimehq
               </Link>
             </Text>
 
