@@ -19,7 +19,11 @@ echo "Running Prisma generate..."
 pnpm db:generate
 
 echo "🚀 Restarting PM2 service..."
-npx pm2 restart ecosystem.config.js || pm2 start ecosystem.config.js
+if [ "$NODE_ENV" = "production" ]; then
+  npx pm2 restart ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+else
+  npx pm2 restart ecosystem.config.js || pm2 start ecosystem.config.js
+fi
 
 npx pm2 save
 

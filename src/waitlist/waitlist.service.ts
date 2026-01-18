@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, Logger } from '@nestjs/common';
 import { EmailService } from '../email/email.service';
 import { WaitlistDal } from './waitlist-dal';
 import { CreateWaitlistDto } from './dto/create-waitlist.dto';
@@ -7,6 +7,8 @@ import { WaitlistUser } from './entities/waitlist.entity';
 
 @Injectable()
 export class WaitlistService {
+  private readonly logger = new Logger(WaitlistService.name);
+
   constructor(
     private readonly emailService: EmailService,
     private readonly waitlistDal: WaitlistDal,
@@ -33,9 +35,10 @@ export class WaitlistService {
     // Send welcome email (with error handling)
     try {
       await this.emailService.sendWelcomeEmail(email, name);
+      this.logger.log(`Email sent to ${email}`);
     } catch (error) {
+      this.logger.error(`Failed to send welcome email: ${error.message}`);
       console.error('Failed to send welcome email:', error.message);
-      // Continue anyway - user is still added to waitlist
     }
 
     return {
