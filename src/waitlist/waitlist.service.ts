@@ -38,7 +38,6 @@ export class WaitlistService {
       this.logger.log(`Email sent to ${email}`);
     } catch (error) {
       this.logger.error(`Failed to send welcome email: ${error.message}`);
-      console.error('Failed to send welcome email:', error.message);
     }
 
     return {
