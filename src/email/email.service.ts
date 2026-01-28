@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { render } from '@react-email/render';
 import { StorytimeWelcome } from './templates/storytime-welcome';
+import { ContactConfirmation } from './templates/contact-confirmation';
 
 @Injectable()
 export class EmailService {
@@ -30,6 +31,44 @@ export class EmailService {
       to: email,
       subject: 'Welcome to StoryTime Waitlist!',
       html,
+    });
+  }
+
+  async sendContactConfirmationEmail(
+    email: string,
+    name: string,
+  ): Promise<void> {
+    const html = await render(ContactConfirmation({ name }));
+
+    await this.transporter.sendMail({
+      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'hello@storytimeapp.me')}>`,
+      to: email,
+      subject: "We've Received Your Message - StoryTime",
+      html,
+    });
+  }
+
+  async sendContactNotificationEmail(
+    name: string,
+    email: string,
+    message: string,
+  ): Promise<void> {
+    const adminEmail = this.configService.get(
+      'CONTACT_NOTIFICATION_EMAIL',
+      'hello@storytimeapp.me',
+    );
+
+    await this.transporter.sendMail({
+      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'hello@storytimeapp.me')}>`,
+      to: adminEmail,
+      subject: `New Contact Form Submission from ${name}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message.replace(/\n/g, '<br>')}</p>
+      `,
     });
   }
 }
