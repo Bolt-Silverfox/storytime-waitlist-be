@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Env } from '../config/env.validation';
 import * as nodemailer from 'nodemailer';
 import { render } from '@react-email/render';
 import { StorytimeWelcome } from './templates/storytime-welcome';
@@ -9,7 +10,7 @@ import { ContactConfirmation } from './templates/contact-confirmation';
 export class EmailService {
   private transporter: nodemailer.Transporter;
 
-  constructor(private configService: ConfigService) {
+  constructor(private configService: ConfigService<Env>) {
     const encryption = this.configService.get('MAIL_ENCRYPTION', 'TLS');
 
     this.transporter = nodemailer.createTransport({
@@ -27,7 +28,7 @@ export class EmailService {
     const html = await render(StorytimeWelcome({ username: name, email }));
 
     await this.transporter.sendMail({
-      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'hello@storytimeapp.me')}>`,
+      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'team@storytimeapp.me')}>`,
       to: email,
       subject: 'Welcome to StoryTime Waitlist!',
       html,
@@ -41,7 +42,7 @@ export class EmailService {
     const html = await render(ContactConfirmation({ name }));
 
     await this.transporter.sendMail({
-      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'hello@storytimeapp.me')}>`,
+      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'team@storytimeapp.me')}>`,
       to: email,
       subject: "We've Received Your Message - StoryTime",
       html,
@@ -54,12 +55,12 @@ export class EmailService {
     message: string,
   ): Promise<void> {
     const adminEmail = this.configService.get(
-      'CONTACT_NOTIFICATION_EMAIL',
-      'hello@storytimeapp.me',
+      'MAIL_FROM_ADDRESS',
+      'team@storytimeapp.me',
     );
 
     await this.transporter.sendMail({
-      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'hello@storytimeapp.me')}>`,
+      from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'team@storytimeapp.me')}>`,
       to: adminEmail,
       subject: `New Contact Form Submission from ${name}`,
       html: `
