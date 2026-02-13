@@ -49,6 +49,18 @@ export class EmailService {
     });
   }
 
+  /**
+   * Escapes HTML special characters to prevent HTML injection
+   */
+  private escapeHtml(unsafe: string): string {
+    return unsafe
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   async sendContactNotificationEmail(
     name: string,
     email: string,
@@ -59,16 +71,21 @@ export class EmailService {
       'team@storytimeapp.me',
     );
 
+    // Escape user input to prevent HTML injection
+    const escapedName = this.escapeHtml(name);
+    const escapedEmail = this.escapeHtml(email);
+    const escapedMessage = this.escapeHtml(message).replace(/\n/g, '<br>');
+
     await this.transporter.sendMail({
       from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'team@storytimeapp.me')}>`,
       to: adminEmail,
-      subject: `New Contact Form Submission from ${name}`,
+      subject: `New Contact Form Submission from ${escapedName}`,
       html: `
         <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Name:</strong> ${escapedName}</p>
+        <p><strong>Email:</strong> ${escapedEmail}</p>
         <p><strong>Message:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
+        <p>${escapedMessage}</p>
       `,
     });
   }

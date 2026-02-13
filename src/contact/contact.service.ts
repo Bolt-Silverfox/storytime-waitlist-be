@@ -11,10 +11,14 @@ export class ContactService {
   async submitContactForm(createContactDto: CreateContactDto): Promise<void> {
     const { name, email, message } = createContactDto;
 
+    let confirmationSuccess = false;
+    let notificationSuccess = false;
+
     // Send confirmation email to the user
     try {
       await this.emailService.sendContactConfirmationEmail(email, name);
       this.logger.log(`Contact confirmation email sent to ${email}`);
+      confirmationSuccess = true;
     } catch (error) {
       this.logger.error(
         `Failed to send contact confirmation email: ${error instanceof Error ? error.message : String(error)}`,
@@ -29,9 +33,17 @@ export class ContactService {
         message,
       );
       this.logger.log(`Contact notification email sent to admin`);
+      notificationSuccess = true;
     } catch (error) {
       this.logger.error(
         `Failed to send contact notification email: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    // If both email operations failed, throw an error
+    if (!confirmationSuccess && !notificationSuccess) {
+      throw new Error(
+        'Failed to send contact form emails. Please try again later.',
       );
     }
   }
