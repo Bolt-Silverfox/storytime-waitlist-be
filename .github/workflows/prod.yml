@@ -56,7 +56,9 @@ jobs:
         run: pnpm install
 
       - name: Create .env file
-        run: echo "${{ secrets.ENV_FILE }}" > .env
+        env:
+          ENV_CONTENT: ${{ secrets.ENV_FILE }}
+        run: echo "$ENV_CONTENT" > .env
 
       - name: Generate Prisma client
         run: pnpm db:generate
