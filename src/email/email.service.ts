@@ -10,7 +10,7 @@ import { ContactConfirmation } from './templates/contact-confirmation';
 export class EmailService {
   private transporter: nodemailer.Transporter;
 
-  constructor(private configService: ConfigService<Env>) {
+  constructor(private configService: ConfigService<Env, true>) {
     const encryption = this.configService.get('MAIL_ENCRYPTION', 'TLS');
 
     this.transporter = nodemailer.createTransport({
