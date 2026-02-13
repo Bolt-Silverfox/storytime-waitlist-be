@@ -76,10 +76,13 @@ export class EmailService {
     const escapedEmail = this.escapeHtml(email);
     const escapedMessage = this.escapeHtml(message).replace(/\n/g, '<br>');
 
+    // For subject line, strip newlines but don't HTML escape to avoid displaying entities
+    const subjectName = name.replace(/[\r\n]+/g, ' ').trim();
+
     await this.transporter.sendMail({
       from: `"${this.configService.get('MAIL_FROM_NAME', 'StoryTime')}" <${this.configService.get('MAIL_FROM_ADDRESS', 'team@storytimeapp.me')}>`,
       to: adminEmail,
-      subject: `New Contact Form Submission from ${escapedName}`,
+      subject: `New Contact Form Submission from ${subjectName}`,
       html: `
         <h2>New Contact Form Submission</h2>
         <p><strong>Name:</strong> ${escapedName}</p>
