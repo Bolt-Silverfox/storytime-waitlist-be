@@ -20,6 +20,8 @@ async function bootstrap() {
     origin: (origin, callback) => {
       // Match storytimeapp.me and all subdomains (e.g., www.storytimeapp.me, app.storytimeapp.me)
       const storytimePattern = /^https?:\/\/([a-z0-9-]+\.)*storytimeapp\.me$/i;
+      // Match localhost on any port (e.g., localhost:3000, localhost:5173, 127.0.0.1:8080)
+      const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 
       const allowedOrigins = frontendUrl
         ? frontendUrl.split(',').map((o) => o.trim())
@@ -30,7 +32,12 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      if (!origin || storytimePattern.test(origin) || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        storytimePattern.test(origin) ||
+        localhostPattern.test(origin) ||
+        allowedOrigins.includes(origin)
+      ) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
