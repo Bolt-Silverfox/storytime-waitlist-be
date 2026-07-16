@@ -1,0 +1,35 @@
+name: Security
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  schedule:
+    - cron: '0 4 * * 1'
+
+jobs:
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Report-only; flip to blocking (--audit-level=high, drop `|| true`) once clean.
+      - name: pnpm audit (report)
+        run: pnpm audit --audit-level=moderate || true
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
