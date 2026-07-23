@@ -1,0 +1,22 @@
+module.exports = {
+  apps: [
+    {
+      name: `storytime-waitlist-api-${process.env.NODE_ENV || 'development'}`,
+      script: 'dist/main.js',
+      instances: 1,
+      // Single instance runs in fork mode — cluster mode (PM2's default when
+      // `instances` is set) spawns a master + worker (two node processes) with
+      // no benefit at one instance.
+      exec_mode: 'fork',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'development',
+      },
+      env_production: {
+        NODE_ENV: 'production',
+      },
+    },
+  ],
+};
