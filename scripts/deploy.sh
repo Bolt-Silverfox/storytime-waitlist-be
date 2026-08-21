@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Run pnpm non-interactively. This script runs over a non-interactive SSH
+# session, so when pnpm needs to purge an out-of-date node_modules it would
+# otherwise abort waiting for TTY confirmation
+# (ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY). CI=true tells pnpm to proceed.
+export CI=true
+
 # Load nvm for node
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
