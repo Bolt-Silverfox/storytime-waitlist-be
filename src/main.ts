@@ -1,3 +1,6 @@
+// Sentry must be imported and initialized before anything else so the SDK can
+// instrument Nest and its dependencies. Keep this as the first import.
+import './instrument';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
