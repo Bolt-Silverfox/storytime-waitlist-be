@@ -1,0 +1,15 @@
+# Single-package repo. `packages` is required so the runner's pnpm 9 accepts
+# this file at all (else: "packages field missing or empty"); '.' just declares
+# the repo root as the sole package.
+#
+# `onlyBuiltDependencies` is the real reason this file exists: the deploy server
+# runs pnpm 10.15+, which reads build-script approvals from here (no longer from
+# package.json). Prisma needs its postinstall (engine download + generate) or
+# `pnpm install` exits with ERR_PNPM_IGNORED_BUILDS before build/pm2-restart.
+packages:
+  - '.'
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - prisma
+  - unrs-resolver
