@@ -16,7 +16,13 @@ export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 
 echo "📦 Installing dependencies..."
-pnpm install --frozen-lockfile
+# pnpm 10 blocks dependency build scripts by default and the server's pnpm
+# treats the ignored builds as fatal (ERR_PNPM_IGNORED_BUILDS, exit 1). Install
+# with --ignore-scripts to skip that gate entirely (same as the CI build job);
+# the Prisma query engine is then placed by `pnpm db:generate` below, and the
+# only unbuilt packages (unrs-resolver = lint tooling, @scarf/scarf = telemetry)
+# are not needed at runtime.
+pnpm install --frozen-lockfile --ignore-scripts
 
 echo "🗄 Running Prisma migrations..."
 pnpm db:migrate
