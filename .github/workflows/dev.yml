@@ -6,12 +6,21 @@ on:
     types: [opened, synchronize, closed]
   workflow_dispatch: # Allow manual trigger on either branch
 
+# Least privilege: jobs only read the repo. Deploy auth is via SSH secrets.
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Run Backend Tests
     runs-on: ubuntu-latest
     environment: development
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
       - name: Checkout code
         uses: actions/checkout@v7
 
@@ -26,7 +35,16 @@ jobs:
           version: 9
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --ignore-scripts
+
+      # Install runs with --ignore-scripts, so @prisma/client's postinstall
+      # (generate) is skipped. PrismaService extends PrismaClient, so tests can't
+      # import it until the client is generated.
+      - name: Generate Prisma client
+        run: pnpm db:generate
+        env:
+          # generate does not connect; prisma.config.ts only requires the var to exist.
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db?schema=public
 
       - name: Run tests (if any)
         run: pnpm test || echo "⚠ No tests found"
@@ -39,6 +57,11 @@ jobs:
     if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
 
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
       - name: Checkout code
         uses: actions/checkout@v7
 
@@ -53,7 +76,7 @@ jobs:
           version: 9
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --ignore-scripts
 
       - name: Create .env file
         run: echo "${{ secrets.ENV_FILE }}" > .env

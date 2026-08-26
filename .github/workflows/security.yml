@@ -12,6 +12,11 @@ jobs:
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
@@ -20,7 +25,7 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       # Report-only; flip to blocking (--audit-level=high, drop `|| true`) once clean.
       - name: pnpm audit (report)
         run: pnpm audit --audit-level=moderate || true
@@ -29,6 +34,11 @@ jobs:
     name: Secret scan
     runs-on: ubuntu-latest
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
