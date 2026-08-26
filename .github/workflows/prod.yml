@@ -42,6 +42,9 @@ jobs:
       # import it until the client is generated.
       - name: Generate Prisma client
         run: pnpm db:generate
+        env:
+          # generate does not connect; prisma.config.ts only requires the var to exist.
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db?schema=public
 
       - name: Run tests (if any)
         run: pnpm test || echo "⚠ No tests found"
