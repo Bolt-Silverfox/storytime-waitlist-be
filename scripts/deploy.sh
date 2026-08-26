@@ -25,7 +25,15 @@ echo "📦 Installing dependencies..."
 pnpm install --frozen-lockfile --ignore-scripts
 
 echo "🗄 Running Prisma migrations..."
-pnpm db:migrate
+# In production apply already-created migrations non-destructively with
+# `migrate deploy`. `migrate dev` (pnpm db:migrate) is a development-only command
+# that can author new migrations and, on drift, wants to reset the database —
+# never run it against prod. Dev/staging keep using `migrate dev`.
+if [ "$NODE_ENV" = "production" ]; then
+  pnpm exec prisma migrate deploy
+else
+  pnpm db:migrate
+fi
 
 echo "Running Prisma generate..."
 pnpm db:generate
