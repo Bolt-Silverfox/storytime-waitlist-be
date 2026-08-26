@@ -1,0 +1,8 @@
+# pnpm 10.15+ reads build-script approvals from here, not package.json.
+# Prisma needs its postinstall (engine download + generate) on the deploy server,
+# otherwise `pnpm install` exits with ERR_PNPM_IGNORED_BUILDS.
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - prisma
+  - unrs-resolver
