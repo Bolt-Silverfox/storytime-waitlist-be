@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Run pnpm non-interactively. This script runs over a non-interactive SSH
+# session, so when pnpm needs to purge an out-of-date node_modules it would
+# otherwise abort waiting for TTY confirmation
+# (ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY). CI=true tells pnpm to proceed.
+export CI=true
+
 # Load nvm for node
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
@@ -10,10 +16,24 @@ export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 
 echo "📦 Installing dependencies..."
-pnpm install --frozen-lockfile
+# pnpm 10 blocks dependency build scripts by default and the server's pnpm
+# treats the ignored builds as fatal (ERR_PNPM_IGNORED_BUILDS, exit 1). Install
+# with --ignore-scripts to skip that gate entirely (same as the CI build job);
+# the Prisma query engine is then placed by `pnpm db:generate` below, and the
+# only unbuilt packages (unrs-resolver = lint tooling, @scarf/scarf = telemetry)
+# are not needed at runtime.
+pnpm install --frozen-lockfile --ignore-scripts
 
 echo "🗄 Running Prisma migrations..."
-pnpm db:migrate
+# In production apply already-created migrations non-destructively with
+# `migrate deploy`. `migrate dev` (pnpm db:migrate) is a development-only command
+# that can author new migrations and, on drift, wants to reset the database —
+# never run it against prod. Dev/staging keep using `migrate dev`.
+if [ "$NODE_ENV" = "production" ]; then
+  pnpm exec prisma migrate deploy
+else
+  pnpm db:migrate
+fi
 
 echo "Running Prisma generate..."
 pnpm db:generate
