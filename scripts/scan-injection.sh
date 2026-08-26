@@ -75,10 +75,21 @@ is_allowed() {
 }
 
 bad=""
+# In --staged mode, scan the STAGED (index) blob, not the working tree: a dev
+# could stage a payload while leaving the working copy clean, and a pre-commit
+# gate must inspect exactly what is being committed.
+scan_tmp=""
+if [ "$mode" = staged ]; then scan_tmp=$(mktemp) && trap 'rm -f "$scan_tmp"' EXIT; fi
 for f in "${files[@]}"; do
-  [ -f "$f" ] || continue           # deleted/renamed away
   is_scan_target "$f" || continue
-  is_allowed "$f" && continue        # reviewed known-good minified/vendored file
+  if [ "$mode" = staged ]; then
+    git cat-file blob ":$f" > "$scan_tmp" 2>/dev/null || continue  # not in index
+    scan_path="$scan_tmp"
+  else
+    [ -f "$f" ] || continue           # deleted/renamed away
+    scan_path="$f"
+  fi
+  is_allowed "$scan_path" && continue  # reviewed known-good minified/vendored file
 
   # (1) Obfuscated CODE blob: an overlong line that ALSO carries obfuscation /
   # dynamic-exec hallmarks. Overlong ALONE is legit in real source (SVG path
@@ -87,7 +98,7 @@ for f in "${files[@]}"; do
   # _0x… hex identifiers and =require(, so it is caught; a shadcn icon's long
   # SVG line is not. JSON/data is inert and excluded from this rule entirely.
   if is_executable_code "$f" \
-     && awk -v m="$MAX_LINE" 'length($0) > m' "$f" \
+     && awk -v m="$MAX_LINE" 'length($0) > m' "$scan_path" \
         | grep -qaE "_0x[0-9a-fA-F]{4,}|=[[:space:]]*require\(|String\.fromCharCode\(|eval\(|atob\(|Function\("; then
     bad+="${f}: overlong obfuscated code line (blob payload)\n"
     continue
@@ -95,13 +106,13 @@ for f in "${files[@]}"; do
 
   # (2) Require-hijack / char-code obfuscation hallmarks anywhere (line length
   # independent — the stager's require shim/hijack may sit on short lines too).
-  if grep -qE "global\[[^]]+\][[:space:]]*=[[:space:]]*require|global\.[A-Za-z_\$][A-Za-z0-9_\$]*[[:space:]]*=[[:space:]]*require|String\.fromCharCode\([^)]*,[^)]*,[^)]*,|(_0x[0-9a-fA-F]{4,}[^_]*){4,}" "$f"; then
+  if grep -qE "global\[[^]]+\][[:space:]]*=[[:space:]]*require|global\.[A-Za-z_\$][A-Za-z0-9_\$]*[[:space:]]*=[[:space:]]*require|String\.fromCharCode\([^)]*,[^)]*,[^)]*,|(_0x[0-9a-fA-F]{4,}[^_]*){4,}" "$scan_path"; then
     bad+="${f}: require-hijack / char-code / hex-identifier obfuscation\n"
     continue
   fi
 
   # (3) Known marker families — cheap fast-path for the two observed waves.
-  if grep -qE "global\['!'\]|A8-2503" "$f"; then
+  if grep -qE "global\['!'\]|A8-2503" "$scan_path"; then
     bad+="${f}: known worm marker family\n"
     continue
   fi

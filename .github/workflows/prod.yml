@@ -6,6 +6,10 @@ on:
     types: [opened, synchronize, closed]
   workflow_dispatch: # Allow manual trigger
 
+# Least privilege: jobs only read the repo. Deploy auth is via SSH secrets.
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Run Backend Tests
@@ -32,6 +36,12 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --ignore-scripts
+
+      # Install runs with --ignore-scripts, so @prisma/client's postinstall
+      # (generate) is skipped. PrismaService extends PrismaClient, so tests can't
+      # import it until the client is generated.
+      - name: Generate Prisma client
+        run: pnpm db:generate
 
       - name: Run tests (if any)
         run: pnpm test || echo "⚠ No tests found"
