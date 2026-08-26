@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import { Request, Response } from 'express';
 
 export interface ErrorResponse {
@@ -43,6 +44,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else if (exception instanceof Error) {
       message = 'Internal server error';
       error = exception.message;
+    }
+
+    // Report server-side failures to Sentry; skip expected 4xx client errors.
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      Sentry.captureException(exception);
     }
 
     const errorResponse: ErrorResponse = {

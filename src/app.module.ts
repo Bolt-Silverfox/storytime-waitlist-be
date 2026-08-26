@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { ConfigModule } from '@nestjs/config';
 import { WaitlistModule } from './waitlist/waitlist.module';
 import { EmailModule } from './email/email.module';
@@ -8,6 +9,7 @@ import { validateEnv } from './config/env.validation';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
