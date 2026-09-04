@@ -43,7 +43,12 @@ async function bootstrap() {
       ) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        // Do not pass an Error here: the cors middleware forwards it into the
+        // Express error chain, turning every bot/scanner probe with a foreign
+        // Origin into a 500 and a Sentry error event. Returning `false` simply
+        // omits the CORS headers, so the browser blocks the request while the
+        // server responds normally.
+        callback(null, false);
       }
     },
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
