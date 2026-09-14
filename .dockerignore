@@ -1,0 +1,112 @@
+# Build context exclusions for the production image (see Dockerfile).
+#
+# The build needs all of these in the context — do not add them here:
+#   * package.json + pnpm-lock.yaml — `pnpm install --frozen-lockfile` fails
+#     without the lockfile (ERR_PNPM_NO_LOCKFILE).
+#   * prisma/schema.prisma — drives `prisma generate`, which is what fetches
+#     the native query engine. Without it the image builds and then dies at
+#     runtime.
+#   * src/, tsconfig.json, tsconfig.build.json, nest-cli.json — `nest build`.
+
+# Dependencies and build output — rebuilt inside the image. A host-built
+# node_modules would also carry the wrong-architecture Prisma engine
+# (amd64 dev box -> arm64 image).
+node_modules
+**/node_modules
+dist
+build
+.pnpm-store
+
+# Secrets. Nothing environment-specific belongs in a layer; configuration
+# arrives as real environment variables at runtime.
+#
+# The `**/` prefixes are load-bearing, not decoration. .dockerignore patterns
+# are matched against the whole path and a bare `*` does NOT cross `/`, so a
+# plain `.env` or `*.pem` entry only excludes files at the context ROOT — a
+# src/.env or certs/rds-ca.pem would still be swept into the build stage by
+# `COPY . .` and baked into a cached layer.
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.p8
+**/*.p12
+**/*.crt
+**/*.cer
+**/*.pfx
+**/*.jks
+**/service-account*.json
+**/id_rsa*
+**/id_ed25519*
+**/id_ecdsa*
+**/*.der
+**/*.asc
+**/*.gpg
+**/*.p7b
+**/.netrc
+**/.pgpass
+**/.envrc
+**/*.tfvars
+**/credentials
+**/credentials.*
+**/.ssh
+**/.aws
+# Registry credentials. None is committed today, but a developer-created
+# .npmrc would otherwise be read by `pnpm install` AND persisted into a layer.
+**/.npmrc
+
+# VCS / CI / editor
+.git
+.gitignore
+.gitattributes
+.githooks
+.github
+.vscode
+.idea
+.devcontainer
+.claude
+*.swp
+.DS_Store
+
+# Tests, fixtures and coverage — not shipped and not needed to build.
+test
+coverage
+.nyc_output
+**/*.spec.ts
+**/*.e2e-spec.ts
+__mocks__
+
+# Local dev orchestration and the PM2 deployment path this image replaces.
+docker-compose*.yml
+Dockerfile
+.dockerignore
+ecosystem.config.js
+
+# Deployment / lint tooling not used by the build.
+scripts
+eslint.config.mjs
+.prettierrc
+
+# prisma.config.ts is correctly placed at the repository root (Prisma only
+# discovers prisma.config.* / .config/prisma.* in process.cwd()), but it is
+# excluded from the image build on purpose:
+#   * its datasource block calls env('DATABASE_URL'), which makes
+#     `prisma generate` depend on a database URL being present at BUILD time,
+#     and no secret should ever be needed to build this image. Verified, not
+#     assumed — with the file present and DATABASE_URL unset, generate fails:
+#       Failed to load config file ... PrismaConfigEnvError: Missing required
+#       environment variable: DATABASE_URL
+#   * the schema and migrations paths it sets (prisma/schema.prisma,
+#     prisma/migrations) are already the CLI defaults, and the `engine:
+#     'classic'` setting matches what the build actually produces anyway — the
+#     amd64 build with this file excluded emits a classic library engine,
+#     libquery_engine-debian-openssl-3.0.x.so.node.
+# Nothing in the runtime image invokes the Prisma CLI, so it is unused there.
+prisma.config.ts
+
+# Docs and logs
+*.md
+docs
+logs
+*.log
+tmp
