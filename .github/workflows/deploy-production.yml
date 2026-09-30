@@ -50,13 +50,14 @@
 # a job that `uses:` a reusable workflow cannot also declare `steps:`, so
 # nothing can be added here that would get the architecture wrong.
 #
-# THE `@main` REF IS LOAD-BEARING, and it pins a different claim than the one
+# THE PINNED SHA IS LOAD-BEARING, and it pins a different claim than the one
 # above. Two trust-policy conditions are in play:
 #   job_workflow_ref  identifies the REUSABLE workflow that is executing — so
-#                     it is storytime-devops' ref, not this repo's. Terraform
-#                     pins it to build-and-deploy.yml@refs/heads/main, so this
-#                     `uses:` line has to stay on `@main`; a SHA or tag pin
-#                     mints `...@<sha>` or `...@refs/tags/...` and is rejected.
+#                     it is storytime-devops' ref, not this repo's. The claim
+#                     is whatever this `uses:` line says, verbatim, and
+#                     Terraform's `github_deploy_workflow_ref` must equal it
+#                     exactly. Both now carry the SHA below. Change one
+#                     without the other and every deploy fails AccessDenied.
 #   sub               identifies the CALLING repo and ref — that is the
 #                     condition the branch note above is about.
 #
@@ -113,7 +114,14 @@ permissions:
 
 jobs:
   deploy:
-    uses: Bolt-Silverfox/storytime-devops/.github/workflows/build-and-deploy.yml@main
+    # PINNED to an immutable commit, not `@main`. The trust policy on the
+    # deploy role matches `job_workflow_ref` exactly, so this SHA and the
+    # `github_deploy_workflow_ref` variable in storytime-devops
+    # (infra/github-oidc-deploy.tf) MUST MOVE TOGETHER -- changing one
+    # alone makes the assume-role fail with AccessDenied. Updating the
+    # pipeline therefore means: merge there, apply the tf change, then
+    # bump this line in all five caller repos.
+    uses: Bolt-Silverfox/storytime-devops/.github/workflows/build-and-deploy.yml@e8e832285ca78d3c49bd54142d9b5aa4fc1ad0b0 # main @ 2026-09-30
     with:
       service: waitlist-api
       environment: ${{ inputs.environment }}
