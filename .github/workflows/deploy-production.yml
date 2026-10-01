@@ -7,15 +7,13 @@
 # that this service's containers are running on the digest just pushed.
 #
 # MANUAL ONLY, ON PURPOSE. There is no `push:` trigger here — deploying this
-# image is a deliberate act a human performs from the Actions tab. That is a
-# statement about THIS workflow, not about the repo:
+# image is a deliberate act a human performs from the Actions tab.
 #
-#   `prod.yml` still runs on every pull_request event against `main`,
-#   including the merge.
-#
-# That pipeline is NOT retired by this change, and its concurrency group is
-# unrelated to this one, so the two can run against the same box at the same
-# time. Retiring it is a separate, separately reviewed change.
+# Nothing else deploys this service any more. `prod.yml` still runs, but only as
+# a test-and-build gate on pull requests into `main` (`opened`, `synchronize`,
+# `reopened` — not `closed`, so not on the merge). Its rsync-over-SSH deploy job
+# was removed, so it cannot reach the box and there is no second pipeline whose
+# concurrency group could race this one against the same host.
 #
 # WHICH BRANCH YOU DISPATCH FROM MATTERS. The deploy role's trust policy pins
 # the OIDC `sub` claim to
@@ -128,10 +126,16 @@ jobs:
       instance_id: ${{ inputs.instance_id }}
       role_arn: ${{ inputs.role_arn }}
 
-# PREREQUISITE, NOT SATISFIED TODAY: there is no Dockerfile on `main` in this
-# repo — one exists on `develop`. The reusable workflow checks out the ref the
-# run was dispatched from and defaults to `Dockerfile` at the repo root; its
-# `dockerfile` input can override the path, but not the ref. So a run
-# dispatched from `main` — the only ref the deploy role accepts — fails at the
-# build step until a production Dockerfile lands on `main`. The deploy roles
-# do not exist yet either.
+# THE DOCKERFILE IS ON `main`, added alongside this caller. The claim this note
+# used to make — that one existed on `develop` — was wrong: this repo had no
+# Dockerfile on any branch, and the image running in production was built from
+# one that was never committed. It is now committed and is the source of truth.
+#
+# The ordering matters: the reusable workflow checks out the ref the run was
+# dispatched from and defaults to `Dockerfile` at the repo root; its `dockerfile`
+# input overrides the path, but not the ref. So a run dispatched from `main` —
+# the only ref the deploy role accepts — fails at the build step if `main` has no
+# Dockerfile.
+#
+# REMAINING PREREQUISITE: the deploy roles do not exist yet. They are created by
+# `terraform apply` in storytime-devops with `manage_github_deploy_roles = true`.
