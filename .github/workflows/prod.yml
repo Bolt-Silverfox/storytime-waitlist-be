@@ -1,12 +1,33 @@
-name: Production Backend CI/CD Pipeline
+# Test and build gate for pull requests into `main`.
+#
+# This file used to also deploy production: it rsynced the working tree over
+# SSH to `secrets.SERVER_HOST` and ran `scripts/deploy.sh` there via
+# appleboy/ssh-action. That host no longer serves production — the waitlist API
+# now runs as a container on the shared EC2 box, whose containers are
+# reconciled by `redeploy.sh` (invocable over SSM). The deploy job has been
+# removed, along with the `rsync --delete` that would mirror the repo tree over
+# a live deployment path if `SERVER_HOST` were ever repointed at the current
+# box.
+#
+# Production deploys are to be made by `deploy-production.yml`, a manual
+# (`workflow_dispatch`) caller of the shared storytime-devops pipeline. That
+# file is not merged yet — it is open as PR #104 — and it also needs a
+# Dockerfile on `main` and the deploy roles applied before it can run. So there
+# is no automated production deploy path in the interim; the running container
+# is unaffected.
+#
+# `pnpm run build` ran only inside the deleted deploy job (post-merge and on
+# dispatch). It is now a step in the test job instead, so the build is checked
+# before merge rather than after.
+name: Production Backend CI
 
 on:
   pull_request:
     branches: ['main']
-    types: [opened, synchronize, closed]
+    types: [opened, synchronize, reopened]
   workflow_dispatch: # Allow manual trigger
 
-# Least privilege: jobs only read the repo. Deploy auth is via SSH secrets.
+# Least privilege: jobs only read the repo.
 permissions:
   contents: read
 
@@ -14,7 +35,6 @@ jobs:
   test:
     name: Run Backend Tests
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
@@ -49,69 +69,5 @@ jobs:
       - name: Run tests (if any)
         run: pnpm test || echo "⚠ No tests found"
 
-  deploy:
-    name: Deploy Backend to Server
-    runs-on: ubuntu-latest
-    environment: production
-    needs: test
-    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Harden runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
-        with:
-          egress-policy: audit
-
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '22'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install --ignore-scripts
-
-      - name: Create .env file
-        env:
-          ENV_CONTENT: ${{ secrets.ENV_FILE }}
-        run: echo "$ENV_CONTENT" > .env
-
-      - name: Generate Prisma client
-        run: pnpm db:generate
-
       - name: Build
         run: pnpm run build
-
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Sync project to server
-        run: |
-          rsync -avz --delete \
-            --exclude 'node_modules' \
-            --exclude '.git' \
-           --exclude '.github' \
-            -e "ssh -i ~/.ssh/deploy_key" \
-            ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/storytime/production/storytime-waitlist/
-
-      - name: Run deployment steps on server
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            export NODE_ENV=production
-            cd ~/storytime/production/storytime-waitlist
-            bash scripts/deploy.sh
