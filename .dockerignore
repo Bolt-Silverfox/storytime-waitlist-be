@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+dist
+test
+*.md
+.env
+.env.*
+!.env.example
+coverage
+.vscode
+.idea
+ecosystem.config.js
