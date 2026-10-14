@@ -95,5 +95,14 @@
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "pnpm": {
+    "packageExtensions": {
+      "ajv-formats": {
+        "dependencies": {
+          "ajv": "^8.20.0"
+        }
+      }
+    }
   }
 }
