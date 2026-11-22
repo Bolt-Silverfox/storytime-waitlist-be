@@ -7,6 +7,13 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - 'dependencies'
+    ignore:
+      # Prisma 7 is a breaking migration (new client generator, driver
+      # adapters, prisma.config.ts changes). Upgrade deliberately, not via bot.
+      - dependency-name: 'prisma'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@prisma/client'
+        update-types: ['version-update:semver-major']
     groups:
       minor-and-patch:
         update-types:
